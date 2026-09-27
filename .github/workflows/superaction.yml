@@ -1,0 +1,38 @@
+# Textualize/rich's pythonpackage.yml: build (os ubuntu-latest, python-version 3.14), for the Superaction scoreboard.
+name: Superaction
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test / superaction-fabric
+    runs-on: superaction-fabric
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+      - name: Install and configure Poetry
+        # TODO: workaround for https://github.com/snok/install-poetry/issues/94
+        uses: snok/install-poetry@v1.3.4
+        with:
+          version: 1.3.1
+          virtualenvs-in-project: true
+      - name: Install dependencies
+        run: poetry install
+      - name: Test with pytest (with coverage)
+        run: |
+          source $VENV
+          pytest tests -v --cov=./rich --cov-report=xml:./coverage.xml --cov-report term-missing
